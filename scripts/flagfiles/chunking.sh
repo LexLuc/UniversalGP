@@ -21,8 +21,8 @@
 --optimizer=RMSPropOptimizer
 --lr_drop_steps=50
 --lr_drop_factor=0.1
---train_steps=500
+--train_steps=1000
 
 save the trained model
---save_dir=./result
+--save_dir=./results
 --model_name=chunking1
