@@ -27,7 +27,7 @@
 --train_steps=800
 --chkpnt_steps=500
 --batch_size=843
---eval_epochs=1000
+--eval_epochs=600
 
 # save the trained model
 --save_dir=./results
