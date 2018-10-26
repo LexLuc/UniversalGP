@@ -27,6 +27,7 @@
 --train_steps=1000
 --chkpnt_steps=500
 --loo_steps=50
+--nelbo_steps=10
 --batch_size=2248
 --eval_epochs=10000
 
