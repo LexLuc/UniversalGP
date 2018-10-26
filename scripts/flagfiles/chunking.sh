@@ -24,11 +24,10 @@
 --optimizer=RMSPropOptimizer
 --lr_drop_steps=50
 --lr_drop_factor=0.1
---train_steps=1000
+--train_steps=800
 --chkpnt_steps=500
---loo_steps=50
---batch_size=2248
---eval_epochs=10000
+--batch_size=843
+--eval_epochs=1000
 
 # save the trained model
 --save_dir=./results

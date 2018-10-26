@@ -33,6 +33,7 @@ def chunking(_):
     
     num_train = round(.8*X.shape[0])
     print(f'training data splited into: train = {num_train}, validation = {X.shape[0]-num_train}')
+    np.seed(233)
     (x_train, y_train), (x_test, y_test) = select_training_and_test(num_train, X, Y)
     
     return Dataset(
