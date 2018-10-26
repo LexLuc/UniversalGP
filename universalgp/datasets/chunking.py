@@ -21,8 +21,8 @@ def chunking(_):
     """
     num_inducing = 100
     print('loading data...')
-    X = np.load('./universalgp/datasets/data/chunking/train_x.npz')
-    Y = np.load('./universalgp/datasets/data/chunking/train_y.npz')
+    X = np.load('./universalgp/datasets/data/chunking/x_train.npy')
+    Y = np.load('./universalgp/datasets/data/chunking/y_train.npy')
     print(f'data loaded: shape of x = {X.shape}, shape of y = {Y.shape}')
 
 #    X = np.linspace(0, 5, num=300, endpoint=False, dtype=np.float32)[:, np.newaxis]    # toy dataset
