@@ -7,6 +7,11 @@ import numpy as np
 
 from . import util
 
+from .datasets.definition import Dataset
+from .datasets.definition import to_tf_dataset_fn
+#from .datasets import to_tf_dataset_fn
+
+
 
 def build_gaussian_process(features, labels, mode, params: dict):
     """Create the Gaussian Process
@@ -113,3 +118,74 @@ def train_gp(dataset, args):
         predictions = np.array([(p['mean'], p['var']) for p in predictions_gen])
         util.post_training(predictions[:, 0], predictions[:, 1], out_dir, dataset, args)
     return gp
+
+
+def validate_gp(dataset, args):
+    """Build a trained GP model and do inference on validation dataset it. This function uses Tensorflow's Estimator API which
+    constructs graphs.
+
+    Args:
+        dataset: a NamedTuple that contains information about the dataset
+        args: parameters in form of a dictionary
+    Returns:
+        None
+    """
+    out_dir = str(Path(args['save_dir']) / Path(args['model_name'])) if args['save_dir'] else None
+    gp = tf.estimator.Estimator(
+        model_fn=build_gaussian_process,
+        params={**args, 'dataset': dataset._replace(train_fn=None, test_fn=None)},
+        model_dir=out_dir,
+        config=tf.estimator.RunConfig().replace(
+            save_checkpoints_secs=None,
+            save_checkpoints_steps=args['chkpnt_steps'],
+            save_summary_steps=args['summary_steps'],
+            keep_checkpoint_max=5,
+            log_step_count_steps=args['chkpnt_steps'],
+            session_config=tf.ConfigProto(
+                gpu_options=tf.GPUOptions(visible_device_list=args['gpus']))))
+                
+    print("Doing Validation...")
+    predictions_gen = gp.predict(input_fn=lambda: dataset.test_fn().batch(len(dataset.xtest)))
+    predictions = np.array([(p['mean'], p['var']) for p in predictions_gen])
+    util.post_training(predictions[:, 0], predictions[:, 1], out_dir, dataset, args)
+
+
+def inference_gp(dataset, args):
+    """Build a trained GP model and do inference on validation dataset it. This function uses Tensorflow's Estimator API which
+    constructs graphs.
+
+    Args:
+        dataset: a NamedTuple that contains information about the dataset
+        args: parameters in form of a dictionary
+    Returns:
+        None
+    """
+
+    x_test = np.load('./universalgp/datasets/data/chunking/test_x.npy')
+    num_test = x_test.shape[0]
+    
+    out_dir = str(Path(args['save_dir']) / Path(args['model_name'])) if args['save_dir'] else None
+    gp = tf.estimator.Estimator(
+        model_fn=build_gaussian_process,
+        params={**args, 'dataset': dataset._replace(train_fn=None, test_fn=None)},
+        model_dir=out_dir,
+        config=tf.estimator.RunConfig().replace(
+            save_checkpoints_secs=None,
+            save_checkpoints_steps=args['chkpnt_steps'],
+            save_summary_steps=args['summary_steps'],
+            keep_checkpoint_max=5,
+            log_step_count_steps=args['chkpnt_steps'],
+            session_config=tf.ConfigProto(
+                gpu_options=tf.GPUOptions(visible_device_list=args['gpus']))))
+                
+    print("Doing Inference...")
+    x_test_fn = tf.estimator.inputs.numpy_input_fn(
+        x={'input': x_test.astype(np.float32)},
+        shuffle=False,
+        
+    )
+    predictions_gen = gp.predict(input_fn=x_test_fn)
+    predictions = np.array([(p['mean'], p['var']) for p in predictions_gen])
+    util.post_training(predictions[:, 0], predictions[:, 1], out_dir, None, args)
+    
+   

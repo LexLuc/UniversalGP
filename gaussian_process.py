@@ -54,9 +54,9 @@ tf.app.flags.DEFINE_float('lr_drop_factor', 0.2, 'For learning rate drop multipl
 FLAGFILE = "scripts/flagfiles/chunking.sh"  # "scripts/flagfiles/simple_example.sh"
 
 
-def main(_):
+def train_pipe(_):
     """
-    The main entry point
+    The train_pipe entry point
 
     This functions constructs the data set and then calls the requested training loop.
     """
@@ -74,5 +74,52 @@ def main(_):
     train_func.train_gp(dataset, args)
 
 
+def validate(_):
+    """
+    The validate entry point
+
+    This functions constructs the data set and then runs validate.
+    """
+    if FLAGS.tf_mode == 'graph':
+        train_func = train_graph
+        tf.logging.set_verbosity(tf.logging.INFO)  # print logging information (e.g. the loss)
+    elif FLAGS.tf_mode == 'eager':
+        train_func = train_eager
+        tf.enable_eager_execution()  # enable Eager Execution (tensors are evaluated immediately)
+    else:
+        raise ValueError(f"Unknown tf_mode: \"{FLAGS.tf_mode}\"")
+    args = {flag: getattr(FLAGS, flag) for flag in FLAGS}  # convert FLAGS to dictionary
+    # take dataset function from the module `datasets` and execute it
+    dataset = getattr(datasets, FLAGS.data)(args)
+    train_func.validate_gp(dataset, args)
+    
+def inference(_):
+    """
+    The inference entry point
+
+    This functions constructs the data set and then runs inference.
+    """
+    if FLAGS.tf_mode == 'graph':
+        train_func = train_graph
+        tf.logging.set_verbosity(tf.logging.INFO)  # print logging information (e.g. the loss)
+    elif FLAGS.tf_mode == 'eager':
+        train_func = train_eager
+        tf.enable_eager_execution()  # enable Eager Execution (tensors are evaluated immediately)
+    else:
+        raise ValueError(f"Unknown tf_mode: \"{FLAGS.tf_mode}\"")
+    args = {flag: getattr(FLAGS, flag) for flag in FLAGS}  # convert FLAGS to dictionary
+    # take dataset function from the module `datasets` and execute it
+    dataset = getattr(datasets, FLAGS.data)(args)
+    train_func.inference_gp(dataset, args)
+
 if __name__ == '__main__':
-    tf.app.run(main=main, argv=[sys.argv[0], f"--flagfile={FLAGFILE}"] if FLAGFILE else sys.argv)
+    if len(sys.argv) != 2 or sys.argv[1] not in ('--train', '--validate', '--inference'):
+        print(f"Usage: python {sys.argv[0]} <--train OR --validate OR --inference>")
+        exit(-1)
+    
+    if sys.argv[1] == '--train':
+        tf.app.run(main=train_pipe, argv=[sys.argv[0], f"--flagfile={FLAGFILE}"] if FLAGFILE else sys.argv)
+    elif sys.argv[1] == '--validate':
+        tf.app.run(main=validate, argv=[sys.argv[0], f"--flagfile={FLAGFILE}"] if FLAGFILE else sys.argv)
+    else:
+        tf.app.run(main=inference, argv=[sys.argv[0], f"--flagfile={FLAGFILE}"] if FLAGFILE else sys.argv)
